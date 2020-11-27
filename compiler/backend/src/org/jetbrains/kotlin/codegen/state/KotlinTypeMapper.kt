@@ -62,6 +62,7 @@ import org.jetbrains.kotlin.resolve.jvm.AsmTypes.DEFAULT_CONSTRUCTOR_MARKER
 import org.jetbrains.kotlin.resolve.jvm.AsmTypes.OBJECT_TYPE
 import org.jetbrains.kotlin.resolve.jvm.JvmClassName
 import org.jetbrains.kotlin.resolve.jvm.annotations.isCompiledToJvmDefault
+import org.jetbrains.kotlin.resolve.jvm.annotations.isJvmRecord
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodGenericSignature
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodParameterKind
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodSignature
@@ -563,7 +564,8 @@ class KotlinTypeMapper @JvmOverloads constructor(
         return when {
             descriptor is PropertyAccessorDescriptor -> {
                 val property = descriptor.correspondingProperty
-                if (isAnnotationClass(property.containingDeclaration)) {
+                val containingDeclaration = property.containingDeclaration
+                if (isAnnotationClass(containingDeclaration) || (containingDeclaration as? ClassDescriptor)?.isJvmRecord() == true) {
                     return property.name.asString()
                 }
 
