@@ -45,11 +45,10 @@ class SyncKotlinAndAndroidSourceSetsTest {
         val kotlinAndroidMainSourceSet = kotlin.sourceSets.getByName("androidMain")
         val androidMainSourceSet = android.sourceSets.getByName("main")
 
-        assertTrue(
-            kotlinAndroidMainSourceSet.kotlin.srcDirs.containsAll(androidMainSourceSet.java.srcDirs),
-            "Expected all Android java srcDirs in Kotlin source set.\n" +
-                    "Kotlin=${kotlinAndroidMainSourceSet.kotlin.srcDirs}\n" +
-                    "Android=${androidMainSourceSet.java.srcDirs}"
+        assertEquals(
+            androidMainSourceSet.java.srcDirs.toSet(),
+            kotlinAndroidMainSourceSet.kotlin.srcDirs.toSet(),
+            "Expected all source directories being present in all models"
         )
     }
 
@@ -60,11 +59,10 @@ class SyncKotlinAndAndroidSourceSetsTest {
         val kotlinAndroidTestSourceSet = kotlin.sourceSets.getByName("androidTest")
         val testSourceSet = android.sourceSets.getByName("test")
 
-        assertTrue(
-            kotlinAndroidTestSourceSet.kotlin.srcDirs.containsAll(testSourceSet.java.srcDirs),
-            "Expected all Android java srcDirs in Kotlin source set.\n" +
-                    "Kotlin=${kotlinAndroidTestSourceSet.kotlin.srcDirs}\n" +
-                    "Android=${testSourceSet.java.srcDirs}"
+        assertEquals(
+            testSourceSet.java.srcDirs.toSet(),
+            kotlinAndroidTestSourceSet.kotlin.srcDirs.toSet(),
+            "Expected all source directories being present in all models"
         )
     }
 
@@ -74,6 +72,11 @@ class SyncKotlinAndAndroidSourceSetsTest {
 
         val kotlinAndroidAndroidTestSourceSet = kotlin.sourceSets.getByName("androidAndroidTest")
         val androidTestSourceSet = android.sourceSets.getByName("androidTest")
+
+        assertTrue(
+            androidTestSourceSet.java.srcDirs.toSet().containsAll(kotlinAndroidAndroidTestSourceSet.kotlin.srcDirs),
+            "Expected all kotlin source directories being registered on AGP"
+        )
 
         assertTrue(
             project.file("src/androidTest/kotlin") !in kotlinAndroidAndroidTestSourceSet.kotlin.srcDirs,
@@ -168,6 +171,11 @@ class SyncKotlinAndAndroidSourceSetsTest {
         assertTrue(
             kotlinAndroidMain.kotlin.srcDirs.containsAll(setOf(project.file("fromKotlin"), project.file("fromAndroid"))),
             "Expected custom configured source directories being present on kotlin source set after evaluation"
+        )
+
+        assertTrue(
+            androidMain.java.srcDirs.containsAll(setOf(project.file("fromKotlin"), project.file("fromAndroid"))),
+            "Expected custom configured source directories being present on android source set after evaluation"
         )
     }
 
