@@ -11,7 +11,6 @@ import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.dsl.multiplatformExtension
-import org.jetbrains.kotlin.gradle.plugin.mpp.kotlinSourceSet
 import kotlin.test.*
 
 class SyncKotlinAndAndroidSourceSetsTest {
@@ -136,20 +135,6 @@ class SyncKotlinAndAndroidSourceSetsTest {
             androidMain.java.srcDirs.containsAll(setOf(project.file("fromKotlin"), project.file("fromAndroid"))),
             "Expected custom configured source directories being present on android source set after evaluation"
         )
-    }
-
-    @Test
-    fun `AndroidSourceSet#kotlinSourceSet extension`() {
-        kotlin.android()
-
-        val main = android.sourceSets.getByName("main")
-        assertSame(kotlin.sourceSets.getByName("androidMain"), main.kotlinSourceSet)
-
-        val test = android.sourceSets.getByName("test")
-        assertSame(kotlin.sourceSets.getByName("androidTest"), test.kotlinSourceSet)
-
-        val androidTest = android.sourceSets.getByName("androidTest")
-        assertSame(kotlin.sourceSets.getByName("androidAndroidTest"), androidTest.kotlinSourceSet)
     }
 }
 
