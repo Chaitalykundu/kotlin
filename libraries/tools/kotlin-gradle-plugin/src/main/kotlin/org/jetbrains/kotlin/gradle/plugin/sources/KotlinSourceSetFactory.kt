@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.gradle.targets.metadata.isKotlinGranularMetadataEnab
 import java.io.File
 
 internal abstract class KotlinSourceSetFactory<T : KotlinSourceSet> internal constructor(
+    protected val fileResolver: FileResolver,
     protected val project: Project
 ) : NamedDomainObjectFactory<KotlinSourceSet> {
 
@@ -28,8 +29,11 @@ internal abstract class KotlinSourceSetFactory<T : KotlinSourceSet> internal con
         return result
     }
 
+    protected open fun defaultSourceLocation(sourceSetName: String): File =
+        project.file("src/$sourceSetName")
+
     protected open fun setUpSourceSetDefaults(sourceSet: T) {
-        sourceSet.kotlin.srcDir(defaultSourceFolder(project, sourceSet.name, "kotlin"))
+        sourceSet.kotlin.srcDir(File(defaultSourceLocation(sourceSet.name), "kotlin"))
         defineSourceSetConfigurations(project, sourceSet)
     }
 
@@ -45,29 +49,19 @@ internal abstract class KotlinSourceSetFactory<T : KotlinSourceSet> internal con
     }
 
     protected abstract fun doCreateSourceSet(name: String): T
-
-    companion object {
-        /**
-         * @return default location of source folders for a kotlin source set
-         * e.g. src/jvmMain/kotlin  (sourceSetName="jvmMain", type="kotlin")
-         */
-        fun defaultSourceFolder(project: Project, sourceSetName: String, type: String): File {
-            return project.file("src/$sourceSetName/$type")
-        }
-    }
 }
 
-
 internal class DefaultKotlinSourceSetFactory(
-    project: Project
-) : KotlinSourceSetFactory<DefaultKotlinSourceSet>(project) {
+    project: Project,
+    fileResolver: FileResolver
+) : KotlinSourceSetFactory<DefaultKotlinSourceSet>(fileResolver, project) {
 
     override val itemClass: Class<DefaultKotlinSourceSet>
         get() = DefaultKotlinSourceSet::class.java
 
     override fun setUpSourceSetDefaults(sourceSet: DefaultKotlinSourceSet) {
         super.setUpSourceSetDefaults(sourceSet)
-        sourceSet.resources.srcDir(defaultSourceFolder(project, sourceSet.name, "resources"))
+        sourceSet.resources.srcDir(File(defaultSourceLocation(sourceSet.name), "resources"))
 
         val dependencyConfigurationWithMetadata = with(sourceSet) {
             listOf(

@@ -13,8 +13,6 @@ import org.jetbrains.kotlin.gradle.internal.Kapt3GradleSubplugin
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.AbstractAndroidProjectHandler.Companion.kotlinSourceSetNameForAndroidSourceSet
 import org.jetbrains.kotlin.gradle.plugin.addConvention
-import org.jetbrains.kotlin.gradle.plugin.sources.KotlinSourceSetFactory
-import org.jetbrains.kotlin.gradle.plugin.sources.KotlinSourceSetFactory.Companion.defaultSourceFolder
 import java.io.File
 
 internal fun syncKotlinAndAndroidSourceSets(target: KotlinAndroidTarget) {
@@ -109,36 +107,39 @@ private fun syncKotlinAndAndroidResources(
 
     androidSourceSet.resources.srcDirs(*kotlinSourceSet.resources.toList().toTypedArray())
     if (androidSourceSet.resources.srcDirs.isNotEmpty()) {
-        androidSourceSet.resources.srcDir(defaultSourceFolder(project, kotlinSourceSet.name, "resources"))
+        androidSourceSet.resources.srcDir(kotlinSourceSet.sourceFolderFor(project, "resources"))
         kotlinSourceSet.resources.srcDirs(androidSourceSet.resources.srcDirs)
     }
 
     if (androidSourceSet.assets.srcDirs.isNotEmpty()) {
-        androidSourceSet.assets.srcDir(defaultSourceFolder(project, kotlinSourceSet.name, "assets"))
+        androidSourceSet.assets.srcDir(kotlinSourceSet.sourceFolderFor(project, "assets"))
     }
 
     if (androidSourceSet.res.srcDirs.isNotEmpty()) {
-        androidSourceSet.res.srcDir(defaultSourceFolder(project, kotlinSourceSet.name, "res"))
+        androidSourceSet.res.srcDir(kotlinSourceSet.sourceFolderFor(project, "res"))
     }
 
     if (androidSourceSet.aidl.srcDirs.isNotEmpty()) {
-        androidSourceSet.aidl.srcDir(defaultSourceFolder(project, kotlinSourceSet.name, "aidl"))
+        androidSourceSet.aidl.srcDir(kotlinSourceSet.sourceFolderFor(project, "aidl"))
     }
 
     if (androidSourceSet.renderscript.srcDirs.isNotEmpty()) {
-        androidSourceSet.renderscript.srcDir(defaultSourceFolder(project, kotlinSourceSet.name, "rs"))
+        androidSourceSet.renderscript.srcDir(kotlinSourceSet.sourceFolderFor(project, "rs"))
     }
 
     if (androidSourceSet.jni.srcDirs.isNotEmpty()) {
-        androidSourceSet.jni.srcDir(defaultSourceFolder(project, kotlinSourceSet.name, "jni"))
+        androidSourceSet.jni.srcDir(kotlinSourceSet.sourceFolderFor(project, "jni"))
     }
 
     if (androidSourceSet.jniLibs.srcDirs.isNotEmpty()) {
-        androidSourceSet.jniLibs.srcDir(defaultSourceFolder(project, kotlinSourceSet.name, "jniLibs"))
+        androidSourceSet.jniLibs.srcDir(kotlinSourceSet.sourceFolderFor(project, "jniLibs"))
     }
 
     if (androidSourceSet.shaders.srcDirs.isNotEmpty()) {
-        androidSourceSet.shaders.srcDir(defaultSourceFolder(project, kotlinSourceSet.name, "shaders"))
+        androidSourceSet.shaders.srcDir(kotlinSourceSet.sourceFolderFor(project, "shaders"))
     }
 }
 
+private fun KotlinSourceSet.sourceFolderFor(project: Project, type: String): File {
+    return project.file("src/${this.name}/$type")
+}
