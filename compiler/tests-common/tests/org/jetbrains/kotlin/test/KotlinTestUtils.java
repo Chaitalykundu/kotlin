@@ -409,13 +409,20 @@ public class KotlinTestUtils {
 
     @Nullable
     public static File getJdk15Home() {
-        return getCustomJdkHome("JDK_15");
+        return getCustomJdkHome("JDK_15", "JDK_15_0");
+    }
+
+    private static File getCustomJdkHome(String version) {
+        return getCustomJdkHome(version, null);
     }
 
     @Nullable
-    private static File getCustomJdkHome(String version) {
+    private static File getCustomJdkHome(String version, @Nullable String otherOption) {
         String jdk = System.getenv(version);
         if (jdk == null) {
+            if (otherOption != null) {
+                return getCustomJdkHome(otherOption, null);
+            }
             return null;
         }
         return new File(jdk);
