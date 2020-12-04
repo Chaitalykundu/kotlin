@@ -418,6 +418,13 @@ class K2JVMCompilerArguments : CommonCompilerArguments() {
     )
     var useOldInlineClassesManglingScheme: Boolean by FreezableVar(false)
 
+    @Argument(
+        value = "-Xjvm-enable-preview",
+        description = "Allow using features from Java language that are in preview phase.\n" +
+                "That would lead to all class-files marked as preview-generated thus it won't be possible to use them in release environment"
+    )
+    var enableJvmPreview: Boolean by FreezableVar(false)
+
     override fun configureAnalysisFlags(collector: MessageCollector): MutableMap<AnalysisFlag<*>, Any> {
         val result = super.configureAnalysisFlags(collector)
         result[JvmAnalysisFlags.strictMetadataVersionSemantics] = strictMetadataVersionSemantics
