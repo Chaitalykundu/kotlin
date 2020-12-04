@@ -139,6 +139,8 @@ fun configureFacetByFlatArgsInfo(kotlinFacet: KotlinFacet, flatArgsInfo: FlatArg
             kotlinFacet.module.configureSdkIfPossible(targetPlatform, compilerArgumentsBucket, modelsProvider)
 
         val additionalArgumentsString = extractAdditionalArgsAndResetIgnored(compilerArgumentsBucket, defaultBucket, targetPlatform)
+        compilerSettings?.additionalArguments =
+            if (additionalArgumentsString.isNotEmpty()) additionalArgumentsString else CompilerSettings.DEFAULT_ADDITIONAL_ARGUMENTS
         val languageLevel = languageLevel
         val apiLevel = apiLevel
         if (languageLevel != null && apiLevel != null && apiLevel > languageLevel) {

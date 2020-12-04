@@ -197,7 +197,15 @@ private fun readCompilerArgumentsBucket(element: Element): FlatCompilerArguments
         val internalArguments = arrayListOf<String>().apply {
             readElementsList(bucketElement, "internalArguments", "internalArgument")?.also { addAll(it) }
         }
-        return FlatCompilerArgumentsBucket(targetPlatform, classpathParts, singleArguments, multipleArguments, flagArguments)
+        return FlatCompilerArgumentsBucket(
+            targetPlatform,
+            classpathParts,
+            singleArguments,
+            multipleArguments,
+            flagArguments,
+            internalArguments,
+            freeArgs
+        )
     }
     return null
 }
@@ -451,10 +459,11 @@ private fun KotlinFacetSettings.writeLatestConfig(element: Element) {
     }
     compilerArgumentsBucket?.also {
         it.convertPathsToSystemIndependent()
-        it.writeCompilerArgumentsBucket(element).apply {
-            dropVersionsIfNecessary(it)
-        }
+        it.writeCompilerArgumentsBucket(element)
     }
+    element.dropVersionsIfNecessary(this)
+    element.setAttribute("languageVersion", autoAdvanceLanguageVersion.toString())
+    element.setAttribute("apiVersion", autoAdvanceApiVersion.toString())
 }
 
 private fun saveElementsList(element: Element, elementsList: List<String>, rootElementName: String, elementName: String) {
@@ -510,6 +519,11 @@ private fun FlatCompilerArgumentsBucket.writeCompilerArgumentsBucket(element: El
     return bucketElement
 }
 
+fun KotlinFacetSettings.detectVersionAutoAdvance() {
+    autoAdvanceLanguageVersion = languageLevel == null
+    autoAdvanceApiVersion = apiLevel == null
+}
+
 fun CommonCompilerArguments.detectVersionAutoAdvance() {
     autoAdvanceLanguageVersion = languageVersion == null
     autoAdvanceApiVersion = apiVersion == null
@@ -526,13 +540,13 @@ fun Element.dropVersionsIfNecessary(settings: CommonCompilerArguments) {
     }
 }
 
-fun Element.dropVersionsIfNecessary(bucket: FlatCompilerArgumentsBucket) {
+fun Element.dropVersionsIfNecessary(settings: KotlinFacetSettings) {
     // Do not serialize language/api version if they correspond to the default language version
-    if (bucket.extractFlagArgumentValue(CommonCompilerArguments::autoAdvanceLanguageVersion)) {
+    if (settings.autoAdvanceLanguageVersion) {
         getOption("languageVersion")?.detach()
     }
 
-    if (bucket.extractFlagArgumentValue(CommonCompilerArguments::autoAdvanceApiVersion)) {
+    if (settings.autoAdvanceApiVersion) {
         getOption("apiVersion")?.detach()
     }
 }

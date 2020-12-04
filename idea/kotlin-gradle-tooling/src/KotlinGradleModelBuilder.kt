@@ -10,6 +10,7 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ProjectDependency
 import org.jetbrains.kotlin.caching.*
+import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import org.jetbrains.plugins.gradle.tooling.ErrorMessageBuilder
 import org.jetbrains.plugins.gradle.tooling.ModelBuilderService
 import java.io.File
@@ -156,42 +157,41 @@ class KotlinGradleModelBuilder : AbstractKotlinGradleModelBuilder() {
 
         val kotlinPluginId = kotlinPluginIds.singleOrNull { project.plugins.findPlugin(it) != null }
         val platformPluginId = platformPluginIds.singleOrNull { project.plugins.findPlugin(it) != null }
-        val kotlinExt = project.extensions.getByName("kotlin")
 
         val cachedArgumentsBySourceSet = LinkedHashMap<String, CachedArgsInfo>()
         val extraProperties = HashMap<String, KotlinTaskProperties>()
-        val converter = RawToCachedCompilerArgumentsBucketConverter(kotlinExt::class.java.classLoader, modelDetachableMapper)
 
-        project.getAllTasks(false)[project]?.forEach { compileTask ->
-            if (compileTask.javaClass.name !in kotlinCompileTaskClasses) return@forEach
+        project.getAllTasks(false)[project]?.filter { it.javaClass.name in kotlinCompileTaskClasses }?.ifNotEmpty {
+            val kotlinExt = project.extensions.getByName("kotlin")
+            val converter = RawToCachedCompilerArgumentsBucketConverter(kotlinExt::class.java.classLoader, modelDetachableMapper)
 
-            val sourceSetName = compileTask.getSourceSetName()
-            val serializedTargetPlatform = compileTask.getSerializedTargetPlatform()
+            forEach { compileTask ->
+                val sourceSetName = compileTask.getSourceSetName()
+                val serializedTargetPlatform = compileTask.getSerializedTargetPlatform()
 
-            val currentCompilerArgumentsBucket = converter.convert(
-                compileTask.getCompilerArguments("getSerializedCompilerArguments")
-                    ?: compileTask.getCompilerArguments("getSerializedCompilerArgumentsIgnoreClasspathIssues")
-                    ?: emptyList(),
-                serializedTargetPlatform
-            )
+                val currentCompilerArgumentsBucket = converter.convert(
+                    compileTask.getCompilerArguments("getSerializedCompilerArguments")
+                        ?: compileTask.getCompilerArguments("getSerializedCompilerArgumentsIgnoreClasspathIssues")
+                        ?: emptyList(),
+                    serializedTargetPlatform
+                )
 
+                val defaultCompilerArgumentsBucket = converter.convert(
+                    compileTask.getCompilerArguments("getDefaultSerializedCompilerArguments").orEmpty(),
+                    serializedTargetPlatform
+                )
 
-            val defaultCompilerArgumentsBucket = converter.convert(
-                compileTask.getCompilerArguments("getDefaultSerializedCompilerArguments").orEmpty(),
-                serializedTargetPlatform
-            )
-
-            val dependencyClasspath = compileTask.getDependencyClasspath()
-            val dependencyClasspathCacheIds =
-                dependencyClasspath.map { modelDetachableMapper.cacheArgument(it) }
-            cachedArgumentsBySourceSet[sourceSetName] = CachedArgsInfoImpl(
-                currentCompilerArgumentsBucket,
-                defaultCompilerArgumentsBucket,
-                dependencyClasspathCacheIds
-            )
-            extraProperties.acknowledgeTask(compileTask, null)
+                val dependencyClasspath = compileTask.getDependencyClasspath()
+                val dependencyClasspathCacheIds =
+                    dependencyClasspath.map { modelDetachableMapper.cacheArgument(it) }
+                cachedArgumentsBySourceSet[sourceSetName] = CachedArgsInfoImpl(
+                    currentCompilerArgumentsBucket,
+                    defaultCompilerArgumentsBucket,
+                    dependencyClasspathCacheIds
+                )
+                extraProperties.acknowledgeTask(compileTask, null)
+            }
         }
-
         val platform = platformPluginId ?: pluginToPlatform.entries.singleOrNull { project.plugins.findPlugin(it.key) != null }?.value
         val implementedProjects = getImplementedProjects(project)
 
